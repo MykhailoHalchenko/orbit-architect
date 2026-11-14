@@ -1,0 +1,82 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Rust: build workspace",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["build", "--workspace"],
+      "problemMatcher": ["$rustc"],
+      "group": "build"
+    },
+    {
+      "label": "Run: desktop",
+      "type": "shell",
+      "windows": {
+        "command": "powershell.exe",
+        "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\run.ps1", "desktop"]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/scripts/run.sh",
+        "args": ["desktop"]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/scripts/run.sh",
+        "args": ["desktop"]
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run: web",
+      "type": "shell",
+      "windows": {
+        "command": "powershell.exe",
+        "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\run.ps1", "web"]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/scripts/run.sh",
+        "args": ["web"]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/scripts/run.sh",
+        "args": ["web"]
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Verify: build",
+      "type": "shell",
+      "windows": {
+        "command": "powershell.exe",
+        "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\run.ps1", "build"]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/scripts/run.sh",
+        "args": ["build"]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/scripts/run.sh",
+        "args": ["build"]
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Verify: tests",
+      "type": "shell",
+      "windows": {
+        "command": "powershell.exe",
+        "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\run.ps1", "test"]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/scripts/run.sh",
+        "args": ["test"]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/scripts/run.sh",
+        "args": ["test"]
+      },
+      "problemMatcher": ["$rustc"]
+    }
+  ]
+}

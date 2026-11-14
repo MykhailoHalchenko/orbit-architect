@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["crates/core", "crates/desktop", "crates/web"]
+
+[profile.release]
+opt-level = 3
+lto = true

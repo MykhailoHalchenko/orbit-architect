@@ -1,0 +1,8 @@
+[package]
+name = "orbit-desktop"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+orbit-core = { path = "../core" }
+raylib = "5.5"

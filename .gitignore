@@ -1,0 +1,6 @@
+/target/
+/crates/web/pkg/
+/crates/web/dist/
+/crates/web/node_modules/
+/crates/web/.vite/
+.env
