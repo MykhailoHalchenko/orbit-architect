@@ -4,7 +4,7 @@ const status = document.querySelector("#status");
 
 init()
   .then(() => {
-    status.textContent = `Rust WebAssembly is ready: 2 + 2 = ${add(2, 2)}`;
+    status.textContent = `Rust WebAssembly is ready: 2 + 2 = ${add(2n, 2n)}`;
   })
   .catch((error) => {
     status.textContent = "Failed to load Rust WebAssembly.";
