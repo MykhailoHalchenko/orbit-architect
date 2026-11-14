@@ -1,12 +1,21 @@
 [CmdletBinding()]
 param(
     [ValidateSet("desktop", "web", "build", "test")]
-    [string]$Target = "desktop"
+    [string]$Target = "desktop",
+    [string]$AssetsDir
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+
+if ($AssetsDir) {
+    $resolvedAssetsDir = Resolve-Path -Path $AssetsDir -ErrorAction Stop
+    if (-not (Test-Path -Path $resolvedAssetsDir -PathType Container)) {
+        throw "Assets directory does not exist: $AssetsDir"
+    }
+    $env:ORBIT_ASSETS_DIR = $resolvedAssetsDir.Path
+}
 
 function Assert-Command([string]$Name) {
     if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {

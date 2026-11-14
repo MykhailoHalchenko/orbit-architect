@@ -7,4 +7,5 @@ edition = "2024"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+orbit-core = { path = "../core" }
 wasm-bindgen = "0.2"

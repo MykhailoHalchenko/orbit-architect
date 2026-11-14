@@ -175,6 +175,7 @@ dependencies = [
 name = "orbit-web"
 version = "0.1.0"
 dependencies = [
+ "orbit-core",
  "wasm-bindgen",
 ]
 

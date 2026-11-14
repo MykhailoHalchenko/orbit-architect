@@ -2,8 +2,18 @@
 set -eu
 
 TARGET="${1:-desktop}"
+ASSETS_DIR="${2:-}"
 ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 cd "$ROOT_DIR"
+
+if [ -n "$ASSETS_DIR" ]; then
+    if [ ! -d "$ASSETS_DIR" ]; then
+        printf "Assets directory does not exist: %s\n" "$ASSETS_DIR" >&2
+        exit 1
+    fi
+    ORBIT_ASSETS_DIR="$(CDPATH= cd -- "$ASSETS_DIR" && pwd)"
+    export ORBIT_ASSETS_DIR
+fi
 
 require_command() {
     if ! command -v "$1" >/dev/null 2>&1; then
@@ -37,7 +47,7 @@ case "$TARGET" in
         cargo test --workspace
         ;;
     *)
-        printf "Usage: %s [desktop|web|build|test]\n" "$0" >&2
+        printf "Usage: %s [desktop|web|build|test] [assets-directory]\n" "$0" >&2
         exit 2
         ;;
 esac
