@@ -21,6 +21,30 @@ import { SoundManager } from "./audio.js";
 const status = document.querySelector("#status");
 const sound = new SoundManager();
 
+const missionReports = Object.freeze({
+  "base-drill": Object.freeze({
+    name: "Base Drill",
+    nameEn: "BASE DRILL",
+    science: 45,
+    conclusion:
+      "Analysis conclusion: The mechanical drill successfully pierced the upper layer of Martian ice to a depth of 350 meters and collected basic core samples. A high concentration of water ice was confirmed, but the drill lacked the power to reach the deep subglacial lake. The mission stayed within budget but requires deeper scanning.\n\nCrew comment: \"We reached the ice's upper shell — the water is definitely there, but the main lake lies deeper!\"",
+  }),
+  "mars-sar": Object.freeze({
+    name: "MARS-SAR Radar",
+    nameEn: "MARS-SAR RADAR",
+    science: 80,
+    conclusion:
+      "Analysis conclusion: The orbital-landing ground-penetrating radar scanned 1.8 km of permafrost and built an accurate 3D map of the subglacial reservoir. A large liquid saltwater lake was detected beneath the South Pole of Mars. The data was transmitted to Earth without loss.\n\nCrew comment: \"A clean signal! We can see the boundaries of the subglacial lake as clearly as the palm of our hand — a perfect site for the next base.\"",
+  }),
+  "quantum-spectrometer": Object.freeze({
+    name: "Quantum Spectrometer",
+    nameEn: "QUANTUM SPECTROMETER",
+    science: 100,
+    conclusion:
+      "Analysis conclusion: Molecular analysis of the subglacial layer detected liquid water, mineral salts, and organic biosignatures. The maximum volume of scientific data was collected — this is the discovery of the century for the colonization of Mars.\n\nCrew comment: \"The spectrometer is off the charts! These samples contain traces of biochemical activity — we found a true oasis under the ice!\"",
+  }),
+});
+
 function setConstructorMode(active) {
   document.body.classList.toggle("constructor-mode", active);
   const reactRoot = document.querySelector("#react-root");
@@ -249,23 +273,63 @@ function renderExploration(game) {
   root.querySelector("#finish").addEventListener("click", () => {
     sound.play("navigation");
     game.finishExploration();
-    renderSummary(game);
+    renderMissionReport(game);
   });
 }
 
-function renderSummary(game) {
+function renderMissionReport(game) {
   setConstructorMode(false);
   const reward = game.reward();
+  const telemetry = game.telemetry;
+  const payload = game.modules.find((module) => module.stage === "payload" && module.selected);
+  const report = missionReports[payload?.id] || missionReports["base-drill"];
+  const status = { Gold: "Success", Silver: "Partial", Bronze: "Fail" }[reward.tier] || "Fail";
+  const conclusion = report.conclusion
+    .split("\n\n")
+    .map((paragraph) => `<p>${paragraph}</p>`)
+    .join("");
   document.querySelector("#app").innerHTML = `
-    <section class="screen-card reward-card">
-      <p class="eyebrow">MISSION COMPLETE</p>
-      <h1>${reward.tier.toUpperCase()} TIER</h1>
-      ${reward.title ? `<h2>${reward.title}</h2>` : ""}
-      <p>Base reward: +$${reward.baseRewardM}M</p>
-      <p>Exploration loot: +$${reward.sampleRewardM}M</p>
-      <p>Unspent budget: +$${reward.unspentBudgetM}M</p>
-      <p>Permanent energy bonus: +${reward.energyBonusKw} kW</p>
-      <p>Next mission budget: <b>$${reward.nextMissionBudgetM}M</b></p>
+    <section class="mission-report-screen">
+      <img class="mission-report-backdrop" src="${assets.backgrounds.hud}" alt="" />
+      <div class="mission-report-ui">
+        <header class="mission-report-header">
+          <p class="mission-report-kicker">MISSION CONTROL · FINAL TRANSMISSION</p>
+          <h1>MISSION REPORT: OASIS UNDER THE ICE</h1>
+          <p>MISSION REPORT: OASIS UNDER THE ICE</p>
+        </header>
+        <div class="mission-report-metrics" aria-label="Mission metrics">
+          <div class="mission-report-plaque">
+            <span>STATUS</span>
+            <strong>${status}</strong>
+          </div>
+          <div class="mission-report-plaque">
+            <span>DATA</span>
+            <strong>${report.science}%</strong>
+          </div>
+          <div class="mission-report-plaque">
+            <span>BUDGET</span>
+            <strong>$${telemetry.budget}M / $${telemetry.budgetLimit}M</strong>
+          </div>
+        </div>
+        <aside class="mission-report-preview">
+          <p class="mission-report-label">SELECTED INSTRUMENT</p>
+          <div class="mission-report-preview-art">
+            <img src="${assets.modules.payload[payload?.id || "base-drill"]}" alt="${report.name}" />
+          </div>
+          <strong>${report.name}</strong>
+          <span>${report.nameEn}</span>
+        </aside>
+        <article class="mission-report-text">
+          <p class="mission-report-label">RETURNED SIGNAL ANALYSIS</p>
+          <div>${conclusion}</div>
+        </article>
+        <button class="mission-report-finish primary-button" id="mission-report-finish" aria-label="FINISH">
+          FINISH
+        </button>
+      </div>
     </section>
   `;
+  document.querySelector("#mission-report-finish").addEventListener("click", () => {
+    window.location.reload();
+  });
 }

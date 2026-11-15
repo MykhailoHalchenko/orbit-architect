@@ -539,6 +539,163 @@ body { overflow: hidden; background: #000; }
 .screen-backdrop, .briefing-sprite img, .team-dialogue img, .module-asset,
 .screen-preview, .details-frame { image-rendering: auto; }
 
+/* Mission report coordinates are measured against the HUD artwork's 16:9 stage. */
+.mission-report-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  container-type: inline-size;
+  isolation: isolate;
+  color: #dff8ff;
+  background: #063b73;
+}
+.mission-report-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.mission-report-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.mission-report-header {
+  position: absolute;
+  top: 5.5%;
+  left: 25%;
+  width: 50%;
+  text-align: center;
+  text-shadow: 0 0 10px #087ec6;
+}
+.mission-report-header h1 {
+  margin: .25cqw 0;
+  color: #effcff;
+  font-size: clamp(1rem, 2.2cqw, 2.4rem);
+  letter-spacing: .08em;
+}
+.mission-report-header p {
+  margin: 0;
+  color: #72dcff;
+  font-size: clamp(.52rem, .75cqw, .8rem);
+  letter-spacing: .16em;
+}
+.mission-report-kicker { opacity: .8; }
+.mission-report-metrics {
+  position: absolute;
+  top: 17%;
+  left: 25%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2cqw;
+  width: 50%;
+}
+.mission-report-plaque {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: .3cqw;
+  padding: .65cqw 1cqw;
+  border: 1px solid rgba(89, 222, 255, .8);
+  background: rgba(3, 45, 93, .78);
+  box-shadow: inset 0 0 1.2cqw rgba(37, 194, 255, .18), 0 0 .8cqw rgba(0, 164, 255, .22);
+  text-align: center;
+}
+.mission-report-plaque span,
+.mission-report-label {
+  color: #72dcff;
+  font-size: clamp(.5rem, .7cqw, .76rem);
+  letter-spacing: .12em;
+}
+.mission-report-plaque strong {
+  overflow: hidden;
+  color: #effcff;
+  font-size: clamp(.7rem, 1.1cqw, 1.2rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mission-report-preview {
+  position: absolute;
+  top: 30%;
+  left: 5%;
+  display: flex;
+  width: 17%;
+  height: 48%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .45cqw;
+  padding: 1cqw;
+  border: 1px solid rgba(89, 222, 255, .5);
+  background: rgba(3, 45, 93, .48);
+  text-align: center;
+}
+.mission-report-preview-art {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 70%;
+  border: 1px solid rgba(89, 222, 255, .35);
+  background: linear-gradient(rgba(60, 190, 230, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(60, 190, 230, .08) 1px, transparent 1px);
+  background-size: 1.7cqw 1.7cqw;
+}
+.mission-report-preview-art img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 .8cqw #2ec9ed);
+}
+.mission-report-preview strong {
+  color: #effcff;
+  font-size: clamp(.55rem, .8cqw, .85rem);
+}
+.mission-report-preview > span {
+  color: #72dcff;
+  font-size: clamp(.45rem, .6cqw, .65rem);
+  letter-spacing: .08em;
+}
+.mission-report-text {
+  position: absolute;
+  top: 30%;
+  left: 25%;
+  width: 50%;
+  height: 47%;
+  overflow: auto;
+  padding: 1.2cqw 1.5cqw;
+  border: 1px solid rgba(89, 222, 255, .7);
+  background: rgba(3, 45, 93, .7);
+  box-shadow: inset 0 0 1.5cqw rgba(37, 194, 255, .13);
+  font-size: clamp(.62rem, .9cqw, .95rem);
+  line-height: 1.45;
+  pointer-events: auto;
+}
+.mission-report-text .mission-report-label {
+  margin: 0 0 .8cqw;
+  border-bottom: 1px solid rgba(89, 222, 255, .35);
+  padding-bottom: .45cqw;
+}
+.mission-report-text p:not(.mission-report-label) {
+  margin: 0 0 1cqw;
+}
+.mission-report-text p:last-child { color: #b6ecff; }
+.mission-report-finish {
+  position: absolute;
+  right: 7%;
+  bottom: 8%;
+  min-width: 12%;
+  margin: 0;
+  padding: .65cqw 1.2cqw;
+  border-radius: 0;
+  font-size: clamp(.55rem, .8cqw, .9rem);
+  letter-spacing: .12em;
+  pointer-events: auto;
+}
+
 /* Console artwork coordinates: every zone is measured from the 16:9 stage. */
 .monitor {
   top: 22.5%;
