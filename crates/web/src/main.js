@@ -25,24 +25,51 @@ const missionReports = Object.freeze({
   "base-drill": Object.freeze({
     name: "Base Drill",
     nameEn: "BASE DRILL",
+    status: "PARTIAL SUCCESS",
     science: 45,
+    medal: "bronze",
+    medalTitle: "Bronze Medal — Partial Success",
+    bonus: 50,
+    kw: 0,
     conclusion:
-      "Analysis conclusion: The mechanical drill successfully pierced the upper layer of Martian ice to a depth of 350 meters and collected basic core samples. A high concentration of water ice was confirmed, but the drill lacked the power to reach the deep subglacial lake. The mission stayed within budget but requires deeper scanning.\n\nCrew comment: \"We reached the ice's upper shell — the water is definitely there, but the main lake lies deeper!\"",
+      "Analysis: Mechanical drill pierced 350m of surface ice and extracted core samples. High water-ice concentration confirmed, but power was insufficient to reach the deep subglacial lake.\n\nCrew: 'We hit the upper ice crust—water is definitely here, but the main lake lies deeper!'",
   }),
   "mars-sar": Object.freeze({
     name: "MARS-SAR Radar",
     nameEn: "MARS-SAR RADAR",
+    status: "SUCCESS",
     science: 80,
+    medal: "silver",
+    medalTitle: "Silver Medal — Successful Mission",
+    bonus: 120,
+    kw: 15,
     conclusion:
-      "Analysis conclusion: The orbital-landing ground-penetrating radar scanned 1.8 km of permafrost and built an accurate 3D map of the subglacial reservoir. A large liquid saltwater lake was detected beneath the South Pole of Mars. The data was transmitted to Earth without loss.\n\nCrew comment: \"A clean signal! We can see the boundaries of the subglacial lake as clearly as the palm of our hand — a perfect site for the next base.\"",
+      "Analysis: Ground-penetrating radar scanned 1.8km of permafrost and mapped the 3D subglacial reservoir. Large liquid saltwater lake confirmed under the South Pole.\n\nCrew: 'Clean signal! We see the subglacial lake boundaries clearly—perfect spot for the next base.'",
   }),
   "quantum-spectrometer": Object.freeze({
     name: "Quantum Spectrometer",
     nameEn: "QUANTUM SPECTROMETER",
+    status: "TRIUMPH",
     science: 100,
+    medal: "gold",
+    medalTitle: "Gold Medal — Mission Triumph",
+    bonus: 250,
+    kw: 40,
     conclusion:
-      "Analysis conclusion: Molecular analysis of the subglacial layer detected liquid water, mineral salts, and organic biosignatures. The maximum volume of scientific data was collected — this is the discovery of the century for the colonization of Mars.\n\nCrew comment: \"The spectrometer is off the charts! These samples contain traces of biochemical activity — we found a true oasis under the ice!\"",
+      "Analysis: Molecular scan confirmed liquid water, mineral salts, and organic biosignatures. Maximum science data collected—discovery of the century for Mars colonization.\n\nCrew: 'Spectrometer is off the charts! Biochemical activity detected—we found a true oasis under the ice!'",
   }),
+});
+
+const payloadScenes = Object.freeze({
+  "base-drill": new URL("../../../Assets/Замерзла пустеля на заході сонця.png", import.meta.url).href,
+  "mars-sar": new URL("../../../Assets/Неоновий HUD із льодовим розрізом.png", import.meta.url).href,
+  "quantum-spectrometer": new URL("../../../Assets/ракета.png", import.meta.url).href,
+});
+
+const medalImages = Object.freeze({
+  bronze: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='45' fill='%23cd7f32' stroke='%23ffd9a3' stroke-width='6'/%3E%3Cpath d='m60 27 9 20 22 2-17 14 5 22-19-11-19 11 5-22-17-14 22-2z' fill='%23fff1d2'/%3E%3C/svg%3E",
+  silver: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='45' fill='%23b9c5d1' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='m60 27 9 20 22 2-17 14 5 22-19-11-19 11 5-22-17-14 22-2z' fill='%23fff'/%3E%3C/svg%3E",
+  gold: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='45' fill='%23f5c542' stroke='%23fff1a8' stroke-width='6'/%3E%3Cpath d='m60 27 9 20 22 2-17 14 5 22-19-11-19 11 5-22-17-14 22-2z' fill='%23fff8cf'/%3E%3C/svg%3E",
 });
 
 function setConstructorMode(active) {
@@ -235,7 +262,7 @@ function renderConstructor(game) {
   publishTelemetry(game.rust);
   root.addEventListener(
     "launched",
-    () => renderExploration(game),
+    () => renderMissionReport(game),
     { once: true },
   );
 }
@@ -283,24 +310,22 @@ function renderMissionReport(game) {
   const telemetry = game.telemetry;
   const payload = game.modules.find((module) => module.stage === "payload" && module.selected);
   const report = missionReports[payload?.id] || missionReports["base-drill"];
-  const status = { Gold: "Success", Silver: "Partial", Bronze: "Fail" }[reward.tier] || "Fail";
-  const conclusion = report.conclusion
-    .split("\n\n")
-    .map((paragraph) => `<p>${paragraph}</p>`)
-    .join("");
-  document.querySelector("#app").innerHTML = `
+  const scene = payloadScenes[payload?.id] || payloadScenes["base-drill"];
+  const root = document.querySelector("#app");
+  let medalView = false;
+  const render = () => {
+    root.innerHTML = `
     <section class="mission-report-screen">
+      <img class="mission-report-scene" src="${scene}" alt="" />
       <img class="mission-report-backdrop" src="${assets.backgrounds.hud}" alt="" />
       <div class="mission-report-ui">
         <header class="mission-report-header">
-          <p class="mission-report-kicker">MISSION CONTROL · FINAL TRANSMISSION</p>
           <h1>MISSION REPORT: OASIS UNDER THE ICE</h1>
-          <p>MISSION REPORT: OASIS UNDER THE ICE</p>
         </header>
         <div class="mission-report-metrics" aria-label="Mission metrics">
           <div class="mission-report-plaque">
             <span>STATUS</span>
-            <strong>${status}</strong>
+            <strong>${report.status}</strong>
           </div>
           <div class="mission-report-plaque">
             <span>DATA</span>
@@ -311,25 +336,38 @@ function renderMissionReport(game) {
             <strong>$${telemetry.budget}M / $${telemetry.budgetLimit}M</strong>
           </div>
         </div>
-        <aside class="mission-report-preview">
-          <p class="mission-report-label">SELECTED INSTRUMENT</p>
-          <div class="mission-report-preview-art">
-            <img src="${assets.modules.payload[payload?.id || "base-drill"]}" alt="${report.name}" />
-          </div>
-          <strong>${report.name}</strong>
-          <span>${report.nameEn}</span>
-        </aside>
-        <article class="mission-report-text">
-          <p class="mission-report-label">RETURNED SIGNAL ANALYSIS</p>
-          <div>${conclusion}</div>
+        <article class="mission-report-text ${medalView ? "medal-view" : ""}">
+          ${
+            medalView
+              ? `<img class="mission-medal" src="${medalImages[report.medal]}" alt="${report.medalTitle}" />
+                 <h2>${report.medalTitle}</h2>
+                 <p>Congratulations! Mission Completed!</p>
+                 <p>Reward: +$${report.bonus}M Budget (+$${Math.max(0, telemetry.budgetLimit - telemetry.budget)}M unspent carried over)</p>`
+              : `<p>${report.conclusion.replace(/\n\n/g, "</p><p>")}</p>`
+          }
         </article>
-        <button class="mission-report-finish primary-button" id="mission-report-finish" aria-label="FINISH">
-          FINISH
+        <button class="mission-report-finish primary-button" id="mission-report-finish" aria-label="${medalView ? "FINISH" : "VIEW MEDAL"}">
+          ${medalView ? "FINISH" : "VIEW MEDAL"}
         </button>
       </div>
     </section>
-  `;
-  document.querySelector("#mission-report-finish").addEventListener("click", () => {
-    window.location.reload();
-  });
+    `;
+    root.querySelector("#mission-report-finish").addEventListener("click", () => {
+      if (!medalView) {
+        medalView = true;
+        render();
+        return;
+      }
+      const carryOver = Math.max(0, telemetry.budgetLimit - telemetry.budget) + report.bonus;
+      const wallet = JSON.parse(localStorage.getItem("orbit-wallet") || '{"budget":400,"powerKw":0}');
+      localStorage.setItem("orbit-wallet", JSON.stringify({
+        budget: wallet.budget + carryOver,
+        powerKw: wallet.powerKw + report.kw,
+      }));
+      sound.stop("marsAmbient");
+      window.location.reload();
+    });
+  };
+  sound.playLoop("marsAmbient");
+  render();
 }

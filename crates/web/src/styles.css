@@ -696,6 +696,83 @@ body { overflow: hidden; background: #000; }
   pointer-events: auto;
 }
 
+.mission-report-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.mission-report-screen .mission-report-backdrop {
+  z-index: 1;
+  opacity: .9;
+}
+.mission-report-screen .mission-report-ui { z-index: 2; }
+.mission-report-header {
+  top: 4%;
+  left: 13%;
+  width: 74%;
+  height: 6.5%;
+}
+.mission-report-header h1 {
+  margin: 0;
+  font-size: clamp(.7rem, 1.15cqw, 1.2rem);
+}
+.mission-report-metrics {
+  top: 14%;
+  left: 40%;
+  width: 56%;
+  height: 9%;
+  grid-template-columns: 17.5% 17.5% 16.8%;
+  justify-content: space-between;
+  gap: 0;
+}
+.mission-report-plaque {
+  height: 100%;
+  justify-content: center;
+  padding: .3cqw;
+}
+.mission-report-plaque strong { font-size: clamp(.5rem, .75cqw, .8rem); }
+.mission-report-text {
+  top: 25.5%;
+  left: 40%;
+  width: 55.8%;
+  height: 51.5%;
+  padding: 1cqw;
+}
+.mission-report-text .mission-report-label { display: none; }
+.mission-report-finish {
+  top: 80.5%;
+  left: 74.5%;
+  right: auto;
+  bottom: auto;
+  width: 21.3%;
+  height: 9.5%;
+  min-width: 0;
+}
+.mission-report-text.medal-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.mission-medal {
+  width: 18%;
+  height: auto;
+  margin-bottom: 1cqw;
+}
+.medal-view h2 { margin: 0 0 1cqw; font-size: clamp(.8rem, 1.4cqw, 1.5rem); }
+.medal-view p { margin: .4cqw 0; }
+.flight-rocket {
+  animation: rocket-landing 2s ease-out forwards;
+}
+@keyframes rocket-landing {
+  from { transform: translate(-50%, -100%); opacity: .35; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
 /* Console artwork coordinates: every zone is measured from the 16:9 stage. */
 .monitor {
   top: 22.5%;
