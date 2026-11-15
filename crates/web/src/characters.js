@@ -2,8 +2,14 @@ import { assets } from "./assets.js";
 
 const characterAssets = {
   Financier: assets.characters.financier,
-  Engineer: assets.characters.engineer,
-  Scientist: assets.characters.scientist,
+  Engineer: {
+    ...assets.characters.engineer,
+    focused: assets.characters.engineer.neutral,
+  },
+  Scientist: {
+    ...assets.characters.scientist,
+    inspired: assets.characters.scientist.excited,
+  },
 };
 
 export function createCharacter({ role, emotion, dialogue }) {

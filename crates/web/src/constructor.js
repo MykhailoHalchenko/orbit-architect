@@ -29,28 +29,44 @@ export class ConstructorView {
       .filter(Boolean);
   }
 
+  syncModuleSelection(stageIndex, option) {
+    const stage = stages[stageIndex][1];
+    this.game.modules.forEach((module) => {
+      if (module.stage === stage) module.selected = false;
+    });
+    const selected = this.game.modules.filter((module) => module.stage === stage)[option];
+    if (selected) selected.selected = true;
+    this.renderStages();
+    this.renderTelemetry();
+  }
+
   render() {
     this.root.innerHTML = `
-      <section class="constructor-layout">
-        <aside class="telemetry panel">
-          <h2>Live telemetry</h2>
-          <div id="telemetry-bars"></div>
-          <div id="dialog" class="dialog"></div>
-        </aside>
-        <section class="monitor panel">
-          <p class="eyebrow">ENGINEERING CONSOLE</p>
-          <h1>Rocket Constructor</h1>
-          <div id="central-monitor"></div>
+      <section class="constructor-screen">
+        <section class="constructor-layout">
+          <aside class="telemetry panel">
+            <h2>Live telemetry</h2>
+            <div id="telemetry-bars"></div>
+            <div id="dialog" class="dialog"></div>
+          </aside>
+          <section class="monitor panel">
+            <p class="eyebrow">ENGINEERING CONSOLE</p>
+            <h1>Rocket Constructor</h1>
+            <div id="central-monitor"></div>
+          </section>
+          <aside class="coffee panel" title="Coffee mug easter egg" data-asset-slot="coffee-mug">
+            <button id="coffee-button" class="mug" aria-label="Touch coffee mug"></button>
+          </aside>
         </section>
-        <aside class="coffee panel" title="Coffee mug easter egg" data-asset-slot="coffee-mug">
-          <button id="coffee-button" class="mug" aria-label="Touch coffee mug">COFFEE</button>
-          <span>Asset slot: coffee-mug</span>
-        </aside>
-      </section>
-      <section class="bottom-panel panel">
-        <nav id="stage-tabs" class="stage-tabs"></nav>
-        <div id="module-slots" class="module-slots"></div>
-        <button id="launch-button" class="launch-button">LAUNCH</button>
+        <section class="bottom-panel panel">
+          <nav id="stage-tabs" class="stage-tabs"></nav>
+          <div id="module-slots" class="module-slots"></div>
+          <button id="launch-button" class="launch-button pointer-events-auto" aria-label="Launch">
+            <img class="launch-normal" src="${assets.additional["launch-button"]}" alt="LAUNCH" />
+            <img class="launch-pressed" src="${assets.additional["launch-button-pressed"]}" alt="" />
+            <img class="launch-disabled" src="${assets.additional["launch-button-disabled"]}" alt="" />
+          </button>
+        </section>
       </section>
     `;
     this.centralMonitor = new CentralMonitor(this.root.querySelector("#central-monitor"), this.game);
@@ -65,7 +81,10 @@ export class ConstructorView {
     tabs.innerHTML = stages
       .map(
         ([label], index) =>
-          `<button class="stage-tab ${index === this.activeStage ? "active" : ""}" data-stage="${index}">${label}</button>`,
+          `          <button class="stage-tab pointer-events-auto ${index === this.activeStage ? "active" : ""}" data-stage="${index}">
+            <img src="${assets.additional[`stage-${index + 1}${index === this.activeStage ? "-1" : ""}`]}" alt="" />
+            <span>${label}</span>
+          </button>`,
       )
       .join("");
 
@@ -75,7 +94,7 @@ export class ConstructorView {
       .filter((module) => module.stage === stage)
       .map(
         (module, option) => `
-          <button class="module-slot ${module.selected ? "selected" : ""}" data-option="${option}">
+          <button class="module-slot pointer-events-auto ${module.selected ? "selected" : ""}" data-option="${option}">
             <img class="module-asset" src="${assets.modules[stage === "launch_vehicle" ? "launchVehicle" : stage][module.id]}" alt="" />
             <strong>${module.name}</strong>
             <span>$${module.costM}M · ${(module.massTenths / 10).toFixed(1)}t</span>
@@ -110,19 +129,20 @@ export class ConstructorView {
   }
 
   bindEvents() {
-    this.root.querySelectorAll("[data-stage]").forEach((button) => {
-      button.addEventListener("click", () => {
-        this.activeStage = Number(button.dataset.stage);
-        this.renderStages();
-        this.bindModuleEvents();
-      });
-    });
+    const tabs = this.root.querySelector("#stage-tabs");
+    tabs.onclick = (event) => {
+      const button = event.target.closest("[data-stage]");
+      if (!button) return;
+      this.activeStage = Number(button.dataset.stage);
+      this.renderStages();
+      this.bindModuleEvents();
+    };
     this.bindModuleEvents();
     this.root.querySelector("#coffee-button").addEventListener("click", () => {
       this.message = this.dialogs.coffee();
       this.renderDialog();
     });
-    this.root.querySelector("#launch-button").addEventListener("click", () => this.launch());
+    this.root.querySelector("#launch-button").onclick = () => this.launch();
   }
 
   bindModuleEvents() {
@@ -151,6 +171,8 @@ export class ConstructorView {
       this.renderDialog();
       return;
     }
+    this.message = "Launch confirmed, Chief. Mission camera is live.";
+    this.renderDialog();
     this.centralMonitor.renderFlight(result);
     this.root.querySelector("#launch-button").disabled = true;
     window.setTimeout(() => {

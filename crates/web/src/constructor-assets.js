@@ -44,3 +44,17 @@ export const constructorAssets = Object.freeze({
     "launch-button-disabled": new URL("../../../Assets/кнопка запуск заблокована.png", import.meta.url).href,
   }),
 });
+
+export const allConstructorAssetUrls = Object.freeze([
+  ...Object.values(constructorAssets.payload),
+  ...Object.values(constructorAssets.power),
+  ...Object.values(constructorAssets.hull),
+  ...Object.values(constructorAssets.launchVehicle),
+  ...Object.values(constructorAssets.additional),
+]);
+
+export const allAssetFiles = import.meta.glob("../../../Assets/**/*.png", {
+  eager: true,
+  import: "default",
+  query: "?url",
+});

@@ -7,9 +7,13 @@
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <main id="app">
-      <p id="status">Loading Rust WebAssembly...</p>
-    </main>
+    <div id="game-shell">
+      <canvas id="game-canvas" aria-label="Cosmic Game rendering canvas"></canvas>
+      <div id="react-root"></div>
+      <main id="app">
+        <p id="status">Loading Rust WebAssembly...</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

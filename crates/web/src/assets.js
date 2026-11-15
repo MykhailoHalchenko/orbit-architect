@@ -30,5 +30,6 @@ export const assets = Object.freeze({
       sad: new URL("../../../Assets/scientist_sad.png", import.meta.url).href,
     }),
   }),
+  additional: constructorAssets.additional,
   modules: constructorAssets,
 });

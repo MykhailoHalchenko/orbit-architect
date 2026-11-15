@@ -35,8 +35,9 @@ export class Dialogs {
     return null;
   }
 
-  launchError(errors) {
-    return launchMessages[errors[0]] || "Rocket validation failed.";
+  launchError(errors = []) {
+    const errorCode = Array.isArray(errors) ? errors[0] : undefined;
+    return launchMessages[errorCode] || "Rocket validation failed.";
   }
 
   currentTeamLine(index) {

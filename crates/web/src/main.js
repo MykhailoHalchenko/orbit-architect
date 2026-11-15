@@ -10,11 +10,18 @@ import init, {
   team_role,
 } from "../pkg/orbit_web.js";
 import { assets } from "./assets.js";
+import { allAssetFiles, allConstructorAssetUrls } from "./constructor-assets.js";
 import { ConstructorView } from "./constructor.js";
 import { createTeamDialogue } from "./dialogue.js";
 import { WebGame } from "./game.js";
+import { mountEngineeringConsole } from "./react-overlay.jsx";
+import { publishTelemetry } from "./wasm-bridge.js";
 
 const status = document.querySelector("#status");
+
+function setConstructorMode(active) {
+  document.body.classList.toggle("constructor-mode", active);
+}
 
 init()
   .then(() => {
@@ -30,6 +37,15 @@ init()
 
     window.orbitGame = game;
     window.orbitAssets = assets;
+    window.orbitAssetCatalog = Object.freeze([
+      ...allConstructorAssetUrls,
+      ...Object.values(allAssetFiles),
+    ]);
+    for (const assetUrl of window.orbitAssetCatalog) {
+      const preloadedAsset = new Image();
+      preloadedAsset.src = assetUrl;
+      preloadedAsset.alt = "";
+    }
     window.orbitMission = Object.freeze({
       title: mission_title(),
       description: mission_description(),
@@ -47,13 +63,21 @@ init()
   });
 
 function renderMenu(game) {
+  setConstructorMode(false);
   const root = document.querySelector("#app");
   root.innerHTML = `
-    <section class="screen-card">
-      <p class="eyebrow">COSMIC GAME · MISSION 1</p>
-      <h1>Oasis Under the Ice</h1>
-      <p>Assemble a spacecraft, land on Mars, and search the subglacial layer.</p>
-      <button class="primary-button" id="play">PLAY</button>
+    <section class="asset-screen menu-screen">
+      <img class="screen-backdrop" src="${assets.additional["asset-8dfb95c0cfc925a2"]}" alt="" />
+      <img class="screen-preview" src="${assets.backgrounds.menu}" alt="Crew viewing Earth from orbit" />
+      <div class="screen-content">
+        <p class="eyebrow">COSMIC GAME · MISSION 1</p>
+        <h1>Oasis Under the Ice</h1>
+        <p>Assemble a spacecraft, land on Mars, and search the subglacial layer.</p>
+        <button class="image-button" id="play" aria-label="Play">
+          <img class="button-normal" src="${assets.additional["asset-19f514765534d3f4"]}" alt="PLAY" />
+          <img class="button-pressed" src="${assets.additional["asset-image"]}" alt="" />
+        </button>
+      </div>
     </section>
   `;
   root.querySelector("#play").addEventListener("click", () => {
@@ -63,14 +87,27 @@ function renderMenu(game) {
 }
 
 function renderMission(game) {
+  setConstructorMode(false);
   const root = document.querySelector("#app");
   root.innerHTML = `
-    <section class="screen-card">
-      <p class="eyebrow">MISSION SELECT · HANGAR</p>
-      <h1>Choose a mission</h1>
-      <button class="primary-button" id="mission-1">MISSION 1</button>
-      <button class="secondary-button" disabled>MISSION 2 · LOCKED</button>
-      <button class="secondary-button" disabled>MISSION 3 · LOCKED</button>
+    <section class="asset-screen mission-screen">
+      <img class="screen-backdrop" src="${assets.backgrounds.missionHub}" alt="Mission hangar" />
+      <div class="screen-content mission-menu">
+        <p class="eyebrow">MISSION SELECT · HANGAR</p>
+        <h1>Choose a mission</h1>
+        <button class="image-button" id="mission-1" aria-label="Mission 1">
+          <img class="button-normal" src="${assets.additional["artboard-2-copy-2"]}" alt="MISSION 1" />
+          <img class="button-pressed" src="${assets.additional["artboard-2-copy-6"]}" alt="" />
+        </button>
+        <button class="image-button" disabled aria-label="Mission 2 locked">
+          <img class="button-normal" src="${assets.additional["artboard-2-copy-4"]}" alt="MISSION 2" />
+          <img class="button-disabled" src="${assets.additional["artboard-2-copy-7"]}" alt="" />
+        </button>
+        <button class="image-button" disabled aria-label="Mission 3 locked">
+          <img class="button-normal" src="${assets.additional["artboard-2-copy-5"]}" alt="MISSION 3" />
+          <img class="button-disabled" src="${assets.additional["artboard-2-copy-8"]}" alt="" />
+        </button>
+      </div>
     </section>
   `;
   root.querySelector("#mission-1").addEventListener("click", () => {
@@ -80,13 +117,20 @@ function renderMission(game) {
 }
 
 function renderBriefing(game) {
+  setConstructorMode(false);
   const root = document.querySelector("#app");
   root.innerHTML = `
-    <section class="screen-card dialogue-card">
-      <p class="eyebrow">NAVIGATOR · CONFERENCE ROOM</p>
-      <h1>Oasis Under the Ice</h1>
-      <p>${navigator_dialog()}</p>
-      <button class="primary-button" id="briefing-next">NEXT</button>
+    <section class="asset-screen briefing-screen">
+      <img class="screen-backdrop blurred" src="${assets.backgrounds.conferenceRoom}" alt="Conference room" />
+      <div class="briefing-sprite">
+        <img src="${assets.characters.navigator.neutral}" alt="Navigator" />
+      </div>
+      <div class="dialogue-card asset-dialogue">
+        <p class="eyebrow">NAVIGATOR · CONFERENCE ROOM</p>
+        <h1>Oasis Under the Ice</h1>
+        <p>${navigator_dialog()}</p>
+        <button class="secondary-button" id="briefing-next">NEXT</button>
+      </div>
     </section>
   `;
   root.querySelector("#briefing-next").addEventListener("click", () => {
@@ -96,21 +140,30 @@ function renderBriefing(game) {
 }
 
 function renderDetails(game) {
+  setConstructorMode(false);
   let index = 0;
   const root = document.querySelector("#app");
   const update = () => {
     const character = game.dialogue[index];
     root.innerHTML = `
-      <section class="screen-card dialogue-card">
-        <p class="eyebrow">MISSION DETAILS · ${character.role.toUpperCase()}</p>
-        <h1>Oasis Under the Ice</h1>
-        <p>Goal: Landing on the South Pole of Mars and exploring the subglacial layer.</p>
-        <p>Requirements: Install a drill or radar, stay within the $400M budget, and respect structural mass.</p>
-        <hr />
-        <p data-asset-slot="${character.assetKey}"><b>${character.role}</b> · ${character.emotion}</p>
-        <p>${character.dialogue}</p>
-        <button class="secondary-button" id="dialog-next" ${index === 2 ? "disabled" : ""}>NEXT</button>
-        <button class="primary-button" id="constructor-start" ${index !== 2 ? "disabled" : ""}>START CONSTRUCTOR</button>
+      <section class="asset-screen details-screen">
+        <img class="screen-backdrop" src="${assets.backgrounds.missionDetails}" alt="Mission holographic display" />
+        <img class="details-frame" src="${assets.additional["asset-5899a8f7785b74f8"]}" alt="" />
+        <div class="details-content">
+          <p class="eyebrow">MISSION DETAILS · ${character.role.toUpperCase()}</p>
+          <h1>Oasis Under the Ice</h1>
+          <p>Goal: Landing on the South Pole of Mars and exploring the subglacial layer.</p>
+          <p>Requirements: Mandatory drill or radar, budget <= $400M and structural mass compliance.</p>
+          <div class="team-dialogue">
+            <img src="${character.asset}" alt="${character.role} ${character.emotion}" />
+            <div>
+              <p data-asset-slot="${character.assetKey}"><b>${character.role}</b> · ${character.emotion}</p>
+              <p>${character.dialogue}</p>
+            </div>
+          </div>
+          <button class="secondary-button" id="dialog-next" ${index === 2 ? "disabled" : ""}>NEXT</button>
+          <button class="primary-button" id="constructor-start" ${index !== 2 ? "disabled" : ""}>START CONSTRUCTOR</button>
+        </div>
       </section>
     `;
     root.querySelector("#dialog-next").addEventListener("click", () => {
@@ -127,18 +180,24 @@ function renderDetails(game) {
 }
 
 function renderConstructor(game) {
+  setConstructorMode(true);
   const root = document.querySelector("#app");
   root.innerHTML = "";
   const view = new ConstructorView(root, game);
+  window.orbitConstructor = view;
+  publishTelemetry(game.rust);
+  mountEngineeringConsole(game.rust, game.modules, (stage, option) => {
+    view.syncModuleSelection(stage, option);
+  });
   root.addEventListener(
     "launched",
     () => renderExploration(game),
     { once: true },
   );
-  window.orbitConstructor = view;
 }
 
 function renderExploration(game) {
+  setConstructorMode(false);
   const root = document.querySelector("#app");
   root.innerHTML = `
     <section class="screen-card">
@@ -171,6 +230,7 @@ function renderExploration(game) {
 }
 
 function renderSummary(game) {
+  setConstructorMode(false);
   const reward = game.reward();
   document.querySelector("#app").innerHTML = `
     <section class="screen-card reward-card">
