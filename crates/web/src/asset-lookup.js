@@ -1,4 +1,3 @@
-
 export const imageFiles = import.meta.glob("../../../Assets/**/*.{png,jpg,jpeg,webp}", {
   eager: true,
   import: "default",
