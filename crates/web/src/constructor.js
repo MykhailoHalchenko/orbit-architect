@@ -1,5 +1,6 @@
 import { Dialogs } from "./dialogs.js";
 import { assets } from "./assets.js";
+import { CentralMonitor } from "./central-monitor.js";
 
 const stages = [
   ["Stage 1", "payload"],
@@ -39,8 +40,7 @@ export class ConstructorView {
         <section class="monitor panel">
           <p class="eyebrow">ENGINEERING CONSOLE</p>
           <h1>Rocket Constructor</h1>
-          <div id="rocket-stack" class="rocket-stack"></div>
-          <p class="hint">Parts snap into the assembly grid from Stage 4 to Stage 1.</p>
+          <div id="central-monitor"></div>
         </section>
         <aside class="coffee panel" title="Coffee mug easter egg" data-asset-slot="coffee-mug">
           <button id="coffee-button" class="mug" aria-label="Touch coffee mug">COFFEE</button>
@@ -53,6 +53,7 @@ export class ConstructorView {
         <button id="launch-button" class="launch-button">LAUNCH</button>
       </section>
     `;
+    this.centralMonitor = new CentralMonitor(this.root.querySelector("#central-monitor"), this.game);
     this.renderStages();
     this.renderTelemetry();
     this.renderDialog();
@@ -83,14 +84,7 @@ export class ConstructorView {
       )
       .join("");
 
-    const stack = this.root.querySelector("#rocket-stack");
-    stack.innerHTML = [...stages]
-      .reverse()
-      .map(([label, stage]) => {
-        const selected = this.game.modules.find((module) => module.stage === stage && module.selected);
-        return `<div class="rocket-layer"><span>${label}</span><strong>${selected?.name || "EMPTY BAY"}</strong></div>`;
-      })
-      .join("");
+    this.centralMonitor.renderBlueprint();
   }
 
   renderTelemetry() {
@@ -157,6 +151,10 @@ export class ConstructorView {
       this.renderDialog();
       return;
     }
-    this.root.dispatchEvent(new CustomEvent("launched", { detail: result }));
+    this.centralMonitor.renderFlight(result);
+    this.root.querySelector("#launch-button").disabled = true;
+    window.setTimeout(() => {
+      this.root.dispatchEvent(new CustomEvent("launched", { detail: result }));
+    }, 2200);
   }
 }
