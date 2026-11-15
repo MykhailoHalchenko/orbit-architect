@@ -10,12 +10,19 @@ const stages = [
 ];
 
 export class ConstructorView {
-  constructor(root, game) {
+  constructor(root, game, sound) {
     this.root = root;
     this.game = game;
+    this.sound = sound;
     this.dialogs = new Dialogs(game.dialogue);
     this.activeStage = 0;
     this.message = this.dialogs.engineerEnter();
+    this.handleCoffeeRequest = () => {
+      this.sound.play("click");
+      this.message = this.dialogs.coffee();
+      this.renderDialog();
+    };
+    window.addEventListener("game:coffee_request", this.handleCoffeeRequest);
     this.render();
   }
 
@@ -134,13 +141,13 @@ export class ConstructorView {
       const button = event.target.closest("[data-stage]");
       if (!button) return;
       this.activeStage = Number(button.dataset.stage);
+      this.sound.play("navigation");
       this.renderStages();
       this.bindModuleEvents();
     };
     this.bindModuleEvents();
     this.root.querySelector("#coffee-button").addEventListener("click", () => {
-      this.message = this.dialogs.coffee();
-      this.renderDialog();
+      this.handleCoffeeRequest();
     });
     this.root.querySelector("#launch-button").onclick = () => this.launch();
   }
@@ -149,6 +156,7 @@ export class ConstructorView {
     this.root.querySelectorAll("[data-option]").forEach((button) => {
       button.addEventListener("click", () => {
         const option = Number(button.dataset.option);
+        this.sound.play("selection");
         this.game.modules.forEach((module) => {
           if (module.stage === stages[this.activeStage][1]) module.selected = false;
         });
@@ -167,10 +175,18 @@ export class ConstructorView {
   launch() {
     const result = this.game.launch();
     if (!result.success) {
+      this.sound.play("click");
+      this.root.dispatchEvent(
+        new CustomEvent("game:launch_error", { detail: { errors: result.errors } }),
+      );
+      window.dispatchEvent(
+        new CustomEvent("game:launch_error", { detail: { errors: result.errors } }),
+      );
       this.message = this.dialogs.launchError(result.errors);
       this.renderDialog();
       return;
     }
+    this.sound.play("menu");
     this.message = "Launch confirmed, Chief. Mission camera is live.";
     this.renderDialog();
     this.centralMonitor.renderFlight(result);

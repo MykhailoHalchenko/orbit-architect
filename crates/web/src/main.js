@@ -16,8 +16,11 @@ import { createTeamDialogue } from "./dialogue.js";
 import { WebGame } from "./game.js";
 import { mountEngineeringConsole } from "./react-overlay.jsx";
 import { publishTelemetry } from "./wasm-bridge.js";
+import { allSoundUrls } from "./sound-assets.js";
+import { SoundManager } from "./audio.js";
 
 const status = document.querySelector("#status");
+const sound = new SoundManager();
 
 function setConstructorMode(active) {
   document.body.classList.toggle("constructor-mode", active);
@@ -46,6 +49,7 @@ init()
       preloadedAsset.src = assetUrl;
       preloadedAsset.alt = "";
     }
+    window.orbitSoundCatalog = Object.freeze(allSoundUrls);
     window.orbitMission = Object.freeze({
       title: mission_title(),
       description: mission_description(),
@@ -81,6 +85,7 @@ function renderMenu(game) {
     </section>
   `;
   root.querySelector("#play").addEventListener("click", () => {
+    sound.play("menu");
     game.play();
     renderMission(game);
   });
@@ -111,6 +116,7 @@ function renderMission(game) {
     </section>
   `;
   root.querySelector("#mission-1").addEventListener("click", () => {
+    sound.play("menu");
     game.selectMission(1);
     renderBriefing(game);
   });
@@ -134,6 +140,7 @@ function renderBriefing(game) {
     </section>
   `;
   root.querySelector("#briefing-next").addEventListener("click", () => {
+    sound.play("navigation");
     game.completeBriefing();
     renderDetails(game);
   });
@@ -167,13 +174,17 @@ function renderDetails(game) {
       </section>
     `;
     root.querySelector("#dialog-next").addEventListener("click", () => {
+      sound.play("navigation");
       if (game.nextCharacter()) {
         index += 1;
         update();
       }
     });
     root.querySelector("#constructor-start").addEventListener("click", () => {
-      if (game.startConstructor()) renderConstructor(game);
+      if (game.startConstructor()) {
+        sound.play("navigation");
+        renderConstructor(game);
+      }
     });
   };
   update();
@@ -183,7 +194,7 @@ function renderConstructor(game) {
   setConstructorMode(true);
   const root = document.querySelector("#app");
   root.innerHTML = "";
-  const view = new ConstructorView(root, game);
+  const view = new ConstructorView(root, game, sound);
   window.orbitConstructor = view;
   publishTelemetry(game.rust);
   mountEngineeringConsole(game.rust, game.modules, (stage, option) => {
@@ -216,14 +227,17 @@ function renderExploration(game) {
     statusElement.textContent = `Samples: ${game.reward().samples} / 3 · Secret part: ${game.reward().secretPart ? "found" : "not found"}`;
   };
   root.querySelector("#sample").addEventListener("click", () => {
+    sound.play("selection");
     game.collectSample();
     update();
   });
   root.querySelector("#secret").addEventListener("click", () => {
+    sound.play("selection");
     game.discoverSecretPart();
     update();
   });
   root.querySelector("#finish").addEventListener("click", () => {
+    sound.play("navigation");
     game.finishExploration();
     renderSummary(game);
   });
