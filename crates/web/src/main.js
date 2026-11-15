@@ -14,7 +14,6 @@ import { allAssetFiles, allConstructorAssetUrls } from "./constructor-assets.js"
 import { ConstructorView } from "./constructor.js";
 import { createTeamDialogue } from "./dialogue.js";
 import { WebGame } from "./game.js";
-import { mountEngineeringConsole } from "./react-overlay.jsx";
 import { publishTelemetry } from "./wasm-bridge.js";
 import { allSoundUrls } from "./sound-assets.js";
 import { SoundManager } from "./audio.js";
@@ -24,7 +23,15 @@ const sound = new SoundManager();
 
 function setConstructorMode(active) {
   document.body.classList.toggle("constructor-mode", active);
+  const reactRoot = document.querySelector("#react-root");
+  if (reactRoot) reactRoot.inert = !active;
 }
+
+function focusGameCanvas() {
+  document.querySelector("#game-canvas")?.focus({ preventScroll: true });
+}
+
+window.addEventListener("game:launch_sequence", focusGameCanvas);
 
 init()
   .then(() => {
@@ -131,9 +138,12 @@ function renderBriefing(game) {
       <div class="briefing-sprite">
         <img src="${assets.characters.navigator.neutral}" alt="Navigator" />
       </div>
+      <div class="briefing-title">
+        <p class="eyebrow">MISSION BRIEFING</p>
+        <h1>Oasis Under the Ice</h1>
+      </div>
       <div class="dialogue-card asset-dialogue">
         <p class="eyebrow">NAVIGATOR · CONFERENCE ROOM</p>
-        <h1>Oasis Under the Ice</h1>
         <p>${navigator_dialog()}</p>
         <button class="secondary-button" id="briefing-next">NEXT</button>
       </div>
@@ -156,11 +166,12 @@ function renderDetails(game) {
       <section class="asset-screen details-screen">
         <img class="screen-backdrop" src="${assets.backgrounds.missionDetails}" alt="Mission holographic display" />
         <img class="details-frame" src="${assets.additional["asset-5899a8f7785b74f8"]}" alt="" />
-        <div class="details-content">
+        <div class="details-title">
           <p class="eyebrow">MISSION DETAILS · ${character.role.toUpperCase()}</p>
           <h1>Oasis Under the Ice</h1>
-          <p>Goal: Landing on the South Pole of Mars and exploring the subglacial layer.</p>
-          <p>Requirements: Mandatory drill or radar, budget <= $400M and structural mass compliance.</p>
+        </div>
+        <div class="details-content">
+          <p class="details-requirements">Goal: Land at the South Pole of Mars and explore the subglacial layer.<br />Install a drill or radar, stay under $400M, and respect booster capacity.</p>
           <div class="team-dialogue">
             <img src="${character.asset}" alt="${character.role} ${character.emotion}" />
             <div>
@@ -192,14 +203,12 @@ function renderDetails(game) {
 
 function renderConstructor(game) {
   setConstructorMode(true);
+  focusGameCanvas();
   const root = document.querySelector("#app");
   root.innerHTML = "";
   const view = new ConstructorView(root, game, sound);
   window.orbitConstructor = view;
   publishTelemetry(game.rust);
-  mountEngineeringConsole(game.rust, game.modules, (stage, option) => {
-    view.syncModuleSelection(stage, option);
-  });
   root.addEventListener(
     "launched",
     () => renderExploration(game),
@@ -209,6 +218,7 @@ function renderConstructor(game) {
 
 function renderExploration(game) {
   setConstructorMode(false);
+  focusGameCanvas();
   const root = document.querySelector("#app");
   root.innerHTML = `
     <section class="screen-card">

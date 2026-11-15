@@ -68,7 +68,7 @@ export function EngineeringConsole({ engine, modules = [], onModuleSelected }) {
 
   return (
     <motion.section
-      className="react-console ui-interactive pointer-events-none backdrop-blur-md bg-slate-900/60 shadow-[0_0_15px_rgba(0,255,255,0.3)]"
+      className="react-console pointer-events-none backdrop-blur-md bg-slate-900/60 shadow-[0_0_15px_rgba(0,255,255,0.3)]"
       aria-label="Engineering Console"
       initial={{ opacity: 0, y: -18 }}
       animate={{ opacity: 1, y: 0 }}

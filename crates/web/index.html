@@ -8,11 +8,13 @@
   </head>
   <body>
     <div id="game-shell">
-      <canvas id="game-canvas" aria-label="Cosmic Game rendering canvas"></canvas>
-      <div id="react-root"></div>
-      <main id="app">
-        <p id="status">Loading Rust WebAssembly...</p>
-      </main>
+      <div id="game-stage" class="relative w-full max-w-[1920px] max-h-screen aspect-video overflow-hidden select-none">
+        <canvas id="game-canvas" tabindex="0" aria-label="Cosmic Game rendering canvas"></canvas>
+        <div id="react-root" inert></div>
+        <main id="app">
+          <p id="status">Loading Rust WebAssembly...</p>
+        </main>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

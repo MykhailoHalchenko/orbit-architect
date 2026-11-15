@@ -51,14 +51,14 @@ export class ConstructorView {
     this.root.innerHTML = `
       <section class="constructor-screen">
         <section class="constructor-layout">
-          <aside class="telemetry panel">
-            <h2>Live telemetry</h2>
+          <aside class="telemetry panel" aria-label="Budget and mass telemetry">
             <div id="telemetry-bars"></div>
-            <div id="dialog" class="dialog"></div>
+          </aside>
+          <aside class="engineer-dialog panel" aria-label="Power gauge">
+            <div id="power-gauge"></div>
+            <div id="dialog-toast" class="dialog-toast" aria-live="polite"></div>
           </aside>
           <section class="monitor panel">
-            <p class="eyebrow">ENGINEERING CONSOLE</p>
-            <h1>Rocket Constructor</h1>
             <div id="central-monitor"></div>
           </section>
           <aside class="coffee panel" title="Coffee mug easter egg" data-asset-slot="coffee-mug">
@@ -68,18 +68,21 @@ export class ConstructorView {
         <section class="bottom-panel panel">
           <nav id="stage-tabs" class="stage-tabs"></nav>
           <div id="module-slots" class="module-slots"></div>
-          <button id="launch-button" class="launch-button pointer-events-auto" aria-label="Launch">
-            <img class="launch-normal" src="${assets.additional["launch-button"]}" alt="LAUNCH" />
-            <img class="launch-pressed" src="${assets.additional["launch-button-pressed"]}" alt="" />
-            <img class="launch-disabled" src="${assets.additional["launch-button-disabled"]}" alt="" />
-          </button>
+          <button id="launch-button" class="launch-button pointer-events-auto" aria-label="Launch"></button>
         </section>
       </section>
     `;
-    this.centralMonitor = new CentralMonitor(this.root.querySelector("#central-monitor"), this.game);
+    this.centralMonitor = new CentralMonitor(
+      this.root.querySelector("#central-monitor"),
+      this.game,
+      (stageIndex) => {
+        this.activeStage = stageIndex;
+        this.renderStages();
+        this.bindModuleEvents();
+      },
+    );
     this.renderStages();
     this.renderTelemetry();
-    this.renderDialog();
     this.bindEvents();
   }
 
@@ -89,7 +92,6 @@ export class ConstructorView {
       .map(
         ([label], index) =>
           `          <button class="stage-tab pointer-events-auto ${index === this.activeStage ? "active" : ""}" data-stage="${index}">
-            <img src="${assets.additional[`stage-${index + 1}${index === this.activeStage ? "-1" : ""}`]}" alt="" />
             <span>${label}</span>
           </button>`,
       )
@@ -101,11 +103,12 @@ export class ConstructorView {
       .filter((module) => module.stage === stage)
       .map(
         (module, option) => `
-          <button class="module-slot pointer-events-auto ${module.selected ? "selected" : ""}" data-option="${option}">
-            <img class="module-asset" src="${assets.modules[stage === "launch_vehicle" ? "launchVehicle" : stage][module.id]}" alt="" />
-            <strong>${module.name}</strong>
-            <span>$${module.costM}M · ${(module.massTenths / 10).toFixed(1)}t</span>
-            <small>${module.powerKw > 0 ? "+" : ""}${module.powerKw} kW${module.capacityTenths ? ` · ${(module.capacityTenths / 10).toFixed(1)}t capacity` : ""}</small>
+          <button class="module-slot group pointer-events-auto ${module.selected ? "selected" : ""}" data-option="${option}" aria-label="${module.name}">
+            <img class="module-asset" src="${assets.modules[stage === "launch_vehicle" ? "launchVehicle" : stage][module.id]}" alt="${module.name}" />
+            <span class="module-tooltip">
+              <strong>${module.name}</strong>
+              <small>$${module.costM}M · ${(module.massTenths / 10).toFixed(1)}t · ${module.powerKw} kW</small>
+            </span>
           </button>`,
       )
       .join("");
@@ -116,23 +119,43 @@ export class ConstructorView {
   renderTelemetry() {
     const telemetry = this.game.telemetry;
     const budget = Math.min(100, (telemetry.budget / telemetry.budgetLimit) * 100);
-    const power = telemetry.powerKw >= 0 ? Math.min(100, telemetry.powerKw) : 0;
     const mass = telemetry.capacityTenths
       ? Math.min(100, (telemetry.massTenths / telemetry.capacityTenths) * 100)
       : 0;
     this.root.querySelector("#telemetry-bars").innerHTML = `
-      ${this.bar("Budget", `$${telemetry.budget}M / $${telemetry.budgetLimit}M`, budget, telemetry.budget > telemetry.budgetLimit)}
-      ${this.bar("Energy", `${telemetry.powerKw} kW net`, power, telemetry.powerKw < 0)}
-      ${this.bar("Mass", `${(telemetry.massTenths / 10).toFixed(1)}t / ${(telemetry.capacityTenths / 10).toFixed(1)}t`, mass, telemetry.complete && telemetry.massTenths > telemetry.capacityTenths)}
+      ${this.bar("BUDGET", `$${telemetry.budget}M / $${telemetry.budgetLimit}M`, budget, telemetry.budget > telemetry.budgetLimit)}
+      ${this.bar("MASS", `${(telemetry.massTenths / 10).toFixed(1)}t / ${(telemetry.capacityTenths / 10).toFixed(1)}t`, mass, telemetry.complete && telemetry.massTenths > telemetry.capacityTenths)}
     `;
+    this.renderPowerGauge();
   }
 
   bar(label, value, percent, danger) {
-    return `<div class="bar-group"><div><span>${label}</span><span>${value}</span></div><div class="bar"><i class="${danger ? "danger" : ""}" style="width:${percent}%"></i></div></div>`;
+    return `<div class="bar-group"><div><span>${label}</span><span>${value}</span></div><div class="bar"><i class="${danger ? "danger" : ""}" style="width:${percent}%"></i><span class="bar-limit"></span></div></div>`;
   }
 
   renderDialog() {
-    this.root.querySelector("#dialog").innerHTML = `<b>Engineer</b><p>${this.message}</p>`;
+    const toast = this.root.querySelector("#dialog-toast");
+    toast.textContent = this.message;
+    toast.classList.add("visible");
+    window.clearTimeout(this.toastTimer);
+    this.toastTimer = window.setTimeout(() => toast.classList.remove("visible"), 3200);
+  }
+
+  renderPowerGauge() {
+    const powerOutput = this.game.modules
+      .filter((module) => module.selected && module.powerKw > 0)
+      .reduce((total, module) => total + module.powerKw, 0);
+    const powerConsumed = this.game.modules
+      .filter((module) => module.selected && module.powerKw < 0)
+      .reduce((total, module) => total + Math.abs(module.powerKw), 0);
+    const percent = powerOutput ? Math.min(100, (powerConsumed / powerOutput) * 100) : 0;
+    this.root.querySelector("#power-gauge").innerHTML = `
+      <div class="power-gauge-header"><b>POWER</b><span>/ ${powerOutput} kW</span></div>
+      <svg class="power-gauge-svg" viewBox="0 0 100 55" aria-label="Power consumption gauge">
+        <path class="power-gauge-track" d="M10 50 A40 40 0 0 1 90 50" pathLength="100" />
+        <path class="power-gauge-fill" d="M10 50 A40 40 0 0 1 90 50" pathLength="100" style="stroke-dasharray:${percent} 100" />
+      </svg>
+    `;
   }
 
   bindEvents() {
@@ -187,6 +210,7 @@ export class ConstructorView {
       return;
     }
     this.sound.play("menu");
+    window.dispatchEvent(new CustomEvent("game:launch_sequence"));
     this.message = "Launch confirmed, Chief. Mission camera is live.";
     this.renderDialog();
     this.centralMonitor.renderFlight(result);
