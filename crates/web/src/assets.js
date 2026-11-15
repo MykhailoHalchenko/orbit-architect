@@ -1,40 +1,34 @@
-const assetRoot = "/assets";
+import { constructorAssets } from "./constructor-assets.js";
 
-export const assets = {
-  backgrounds: {
-    menu: `${assetRoot}/backgrounds/menu.png`,
-    missionHub: `${assetRoot}/backgrounds/mission-hub.png`,
-    conferenceRoom: `${assetRoot}/backgrounds/conference-room.png`,
-    missionDetails: `${assetRoot}/backgrounds/mission-details.png`,
-  },
-  characters: {
-    navigator: {
-      neutral: `${assetRoot}/characters/navigator/neutral.png`,
-    },
-    financier: {
-      strict: `${assetRoot}/characters/financier/strict.png`,
-      neutral: `${assetRoot}/characters/financier/neutral.png`,
-      worried: `${assetRoot}/characters/financier/worried.png`,
-    },
-    engineer: {
-      focused: `${assetRoot}/characters/engineer/focused.png`,
-    },
-    scientist: {
-      inspired: `${assetRoot}/characters/scientist/inspired.png`,
-    },
-  },
-};
-
-export function resolveAsset(path) {
-  if (typeof path !== "string" || path.trim() === "") {
-    throw new TypeError("Asset path must be a non-empty string");
-  }
-  return path;
-}
-
-export function setAssetRoot(root) {
-  if (typeof root !== "string" || root.trim() === "") {
-    throw new TypeError("Asset root must be a non-empty string");
-  }
-  return root.replace(/\/+$/, "");
-}
+export const assets = Object.freeze({
+  backgrounds: Object.freeze({
+    menu: new URL("../../../Assets/531ac2012901f62b.png", import.meta.url).href,
+    missionHub: new URL("../../../Assets/b29187f4e8e137aa.png", import.meta.url).href,
+    conferenceRoom: new URL("../../../Assets/b40364a44ee0fd61.png", import.meta.url).href,
+    missionDetails: new URL("../../../Assets/d392504422d17c21.png", import.meta.url).href,
+    hud: new URL("../../../Assets/HUD_.png", import.meta.url).href,
+  }),
+  characters: Object.freeze({
+    navigator: Object.freeze({
+      neutral: new URL("../../../Assets/navigator_neutral.png", import.meta.url).href,
+      proud: new URL("../../../Assets/navigator_proud.png", import.meta.url).href,
+    }),
+    financier: Object.freeze({
+      strict: new URL("../../../Assets/financier_strict.png", import.meta.url).href,
+      neutral: new URL("../../../Assets/financier_neutral.png", import.meta.url).href,
+      smile: new URL("../../../Assets/financier_smile.png", import.meta.url).href,
+      worried: new URL("../../../Assets/financier_worried.png", import.meta.url).href,
+    }),
+    engineer: Object.freeze({
+      happy: new URL("../../../Assets/engineer_happy.png", import.meta.url).href,
+      neutral: new URL("../../../Assets/engineer_neutral.png", import.meta.url).href,
+      sad: new URL("../../../Assets/engineer_sad.png", import.meta.url).href,
+    }),
+    scientist: Object.freeze({
+      excited: new URL("../../../Assets/scientist_excited.png", import.meta.url).href,
+      neutral: new URL("../../../Assets/scientist_neutral.png", import.meta.url).href,
+      sad: new URL("../../../Assets/scientist_sad.png", import.meta.url).href,
+    }),
+  }),
+  modules: constructorAssets,
+});

@@ -1,4 +1,4 @@
-import { assets, resolveAsset } from "./assets.js";
+import { assets } from "./assets.js";
 
 const characterAssets = {
   Financier: assets.characters.financier,
@@ -11,16 +11,12 @@ export function createCharacter({ role, emotion, dialogue }) {
     throw new Error("Character requires role, emotion, and dialogue");
   }
 
-  const asset = characterAssets[role]?.[emotion];
-  if (!asset) {
-    throw new Error(`No asset configured for ${role} with emotion ${emotion}`);
-  }
-
   return Object.freeze({
     role,
     emotion,
     dialogue,
-    asset: resolveAsset(asset),
+    assetKey: `${role.toLowerCase()}-${emotion}`,
+    asset: characterAssets[role]?.[emotion] ?? null,
   });
 }
 
