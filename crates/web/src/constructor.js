@@ -26,6 +26,13 @@ export class ConstructorView {
     this.render();
   }
 
+  destroy() {
+    window.removeEventListener("game:coffee_request", this.handleCoffeeRequest);
+    window.clearTimeout(this.toastTimer);
+    this.root.innerHTML = "";
+    if (window.orbitConstructor === this) window.orbitConstructor = null;
+  }
+
   selectedModules() {
     return this.game.telemetry;
   }
@@ -211,12 +218,8 @@ export class ConstructorView {
     }
     this.sound.play("menu");
     window.dispatchEvent(new CustomEvent("game:launch_sequence"));
-    this.message = "Launch confirmed, Chief. Mission camera is live.";
-    this.renderDialog();
-    this.centralMonitor.renderFlight(result);
-    this.root.querySelector("#launch-button").disabled = true;
-    window.setTimeout(() => {
-      this.root.dispatchEvent(new CustomEvent("launched", { detail: result }));
-    }, 2200);
+    const root = this.root;
+    this.destroy();
+    root.dispatchEvent(new CustomEvent("launched", { detail: result }));
   }
 }

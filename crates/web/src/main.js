@@ -17,6 +17,7 @@ import { WebGame } from "./game.js";
 import { publishTelemetry } from "./wasm-bridge.js";
 import { allSoundUrls } from "./sound-assets.js";
 import { SoundManager } from "./audio.js";
+import { mountEngineeringConsole, unmountEngineeringConsole } from "./react-overlay.jsx";
 
 const status = document.querySelector("#status");
 const sound = new SoundManager();
@@ -60,17 +61,28 @@ const missionReports = Object.freeze({
   }),
 });
 
-const payloadScenes = Object.freeze({
-  "base-drill": new URL("../../../Assets/Замерзла пустеля на заході сонця.png", import.meta.url).href,
-  "mars-sar": new URL("../../../Assets/Неоновий HUD із льодовим розрізом.png", import.meta.url).href,
-  "quantum-spectrometer": new URL("../../../Assets/ракета.png", import.meta.url).href,
-});
+const LANDING_MS = 3000;
+const EXPEDITION_MS = 2500;
 
-const medalImages = Object.freeze({
-  bronze: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='45' fill='%23cd7f32' stroke='%23ffd9a3' stroke-width='6'/%3E%3Cpath d='m60 27 9 20 22 2-17 14 5 22-19-11-19 11 5-22-17-14 22-2z' fill='%23fff1d2'/%3E%3C/svg%3E",
-  silver: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='45' fill='%23b9c5d1' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='m60 27 9 20 22 2-17 14 5 22-19-11-19 11 5-22-17-14 22-2z' fill='%23fff'/%3E%3C/svg%3E",
-  gold: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='45' fill='%23f5c542' stroke='%23fff1a8' stroke-width='6'/%3E%3Cpath d='m60 27 9 20 22 2-17 14 5 22-19-11-19 11 5-22-17-14 22-2z' fill='%23fff8cf'/%3E%3C/svg%3E",
-});
+let phase = "menu";
+let phaseTimers = [];
+
+function setPhase(next) {
+  phase = next;
+  document.body.dataset.phase = next;
+  setConstructorMode(next === "constructor");
+}
+
+function clearPhaseTimers() {
+  phaseTimers.forEach((timer) => window.clearTimeout(timer));
+  phaseTimers = [];
+}
+
+function afterMs(ms, callback) {
+  phaseTimers.push(window.setTimeout(callback, ms));
+}
+
+Object.defineProperty(window, "orbitPhase", { get: () => phase });
 
 function setConstructorMode(active) {
   document.body.classList.toggle("constructor-mode", active);
@@ -253,16 +265,23 @@ function renderDetails(game) {
 }
 
 function renderConstructor(game) {
-  setConstructorMode(true);
+  clearPhaseTimers();
+  setPhase("constructor");
   focusGameCanvas();
   const root = document.querySelector("#app");
   root.innerHTML = "";
   const view = new ConstructorView(root, game, sound);
   window.orbitConstructor = view;
+  mountEngineeringConsole(game.rust, game.modules, (stage, option) =>
+    view.syncModuleSelection(stage, option),
+  );
   publishTelemetry(game.rust);
   root.addEventListener(
     "launched",
-    () => renderMissionReport(game),
+    () => {
+      unmountEngineeringConsole();
+      renderPostLaunch(game);
+    },
     { once: true },
   );
 }
@@ -300,24 +319,58 @@ function renderExploration(game) {
   root.querySelector("#finish").addEventListener("click", () => {
     sound.play("navigation");
     game.finishExploration();
-    renderMissionReport(game);
+    renderPostLaunch(game);
   });
 }
 
-function renderMissionReport(game) {
-  setConstructorMode(false);
-  const reward = game.reward();
-  const telemetry = game.telemetry;
+function selectedPayloadId(game) {
   const payload = game.modules.find((module) => module.stage === "payload" && module.selected);
-  const report = missionReports[payload?.id] || missionReports["base-drill"];
-  const scene = payloadScenes[payload?.id] || payloadScenes["base-drill"];
+  return payload && missionReports[payload.id] ? payload.id : "base-drill";
+}
+
+function renderPostLaunch(game) {
+  clearPhaseTimers();
+  setPhase("landing");
+  const payloadId = selectedPayloadId(game);
+  const { landingScene, rocket, expedition } = assets.postLaunch;
   const root = document.querySelector("#app");
+  root.innerHTML = `
+    <section id="post-launch" class="absolute inset-0 overflow-hidden bg-black" data-phase="landing">
+      <img id="post-launch-scene" class="absolute inset-0 h-full w-full object-cover" src="${landingScene}" alt="Mars surface" />
+      <img id="post-launch-rocket" class="rocket-descend absolute top-[-60%] left-1/2 -translate-x-1/2 h-[65%] w-auto object-contain mix-blend-screen" src="${rocket}" alt="Rocket landing on Mars" />
+    </section>
+  `;
+  sound.playLoop("marsAmbient");
+
+  afterMs(LANDING_MS, () => {
+    setPhase("expedition");
+    const stage = root.querySelector("#post-launch");
+    stage.dataset.phase = "expedition";
+    stage.querySelector("#post-launch-rocket")?.remove();
+    stage.querySelector("#post-launch-scene").src = expedition[payloadId];
+    stage.querySelector("#post-launch-scene").alt = missionReports[payloadId].name;
+  });
+
+  afterMs(LANDING_MS + EXPEDITION_MS, () => {
+    setPhase("report");
+    const stage = root.querySelector("#post-launch");
+    stage.dataset.phase = "report";
+    renderMissionReport(game, stage, payloadId);
+  });
+}
+
+function renderMissionReport(game, stage, payloadId) {
+  const telemetry = game.telemetry;
+  const report = missionReports[payloadId];
+  const overlay = document.createElement("div");
+  overlay.id = "post-launch-report";
+  overlay.className = "report-fade-in absolute inset-0 bg-slate-950/60 backdrop-blur-sm";
+  stage.append(overlay);
   let medalView = false;
   const render = () => {
-    root.innerHTML = `
-    <section class="mission-report-screen">
-      <img class="mission-report-scene" src="${scene}" alt="" />
-      <img class="mission-report-backdrop" src="${assets.backgrounds.hud}" alt="" />
+    overlay.innerHTML = `
+    <section class="mission-report-screen !bg-transparent">
+      <img class="mission-report-backdrop !opacity-60" src="${assets.backgrounds.hud}" alt="" />
       <div class="mission-report-ui">
         <header class="mission-report-header">
           <h1>MISSION REPORT: OASIS UNDER THE ICE</h1>
@@ -339,7 +392,7 @@ function renderMissionReport(game) {
         <article class="mission-report-text ${medalView ? "medal-view" : ""}">
           ${
             medalView
-              ? `<img class="mission-medal" src="${medalImages[report.medal]}" alt="${report.medalTitle}" />
+              ? `<img class="mission-medal" src="${assets.postLaunch.medals[report.medal]}" alt="${report.medalTitle}" />
                  <h2>${report.medalTitle}</h2>
                  <p>Congratulations! Mission Completed!</p>
                  <p>Reward: +$${report.bonus}M Budget (+$${Math.max(0, telemetry.budgetLimit - telemetry.budget)}M unspent carried over)</p>`
@@ -352,7 +405,7 @@ function renderMissionReport(game) {
       </div>
     </section>
     `;
-    root.querySelector("#mission-report-finish").addEventListener("click", () => {
+    overlay.querySelector("#mission-report-finish").addEventListener("click", () => {
       if (!medalView) {
         medalView = true;
         render();
@@ -368,6 +421,5 @@ function renderMissionReport(game) {
       window.location.reload();
     });
   };
-  sound.playLoop("marsAmbient");
   render();
 }

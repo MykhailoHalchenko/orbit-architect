@@ -1,4 +1,5 @@
 import { constructorAssets } from "./constructor-assets.js";
+import { assetByStem } from "./asset-lookup.js";
 
 export const assets = Object.freeze({
   backgrounds: Object.freeze({
@@ -29,6 +30,22 @@ export const assets = Object.freeze({
       neutral: new URL("../../../Assets/scientist_neutral.png", import.meta.url).href,
       sad: new URL("../../../Assets/scientist_sad.png", import.meta.url).href,
     }),
+  }),
+  postLaunch: Object.freeze({
+    landingScene: assetByStem("Замерзла пустеля на заході сонця"),
+    rocket: assetByStem("ракета"),
+    neonHud: assetByStem("Неоновий HUD із льодовим розрізом"),
+    expedition: Object.freeze({
+      "base-drill": assetByStem("Gemini_Generated_Image_too6h7too6h7too6"),
+      "mars-sar": assetByStem("Gemini_Generated_Image_too6h7too6h7too6 (1)"),
+      "quantum-spectrometer": assetByStem("Gemini_Generated_Image_too6h7too6h7too6 (2)"),
+    }),
+    medals: Object.freeze({
+      bronze: assetByStem("Бронзова медаль"),
+      silver: assetByStem("Срібна медаль"),
+      gold: assetByStem("Золота медаль"),
+    }),
+    constructorScreen: assetByStem("шоловний екран в конструкторі"),
   }),
   additional: constructorAssets.additional,
   modules: constructorAssets,

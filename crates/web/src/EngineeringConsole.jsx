@@ -18,7 +18,7 @@ const launchErrorText = {
   over_budget: "Reduce the build cost below $400M.",
 };
 
-export function EngineeringConsole({ engine, modules = [], onModuleSelected }) {
+export function EngineeringConsole({ phase = "constructor", engine, modules = [], onModuleSelected }) {
   const [telemetry, setTelemetry] = useState(initialTelemetry);
   const [message, setMessage] = useState("");
   const [launchError, setLaunchError] = useState(null);
@@ -65,6 +65,8 @@ export function EngineeringConsole({ engine, modules = [], onModuleSelected }) {
 
   const visibleModules = modules.filter((module) => module.stage === "payload");
   const visiblePayloadModules = visibleModules;
+
+  if (phase !== "constructor") return null;
 
   return (
     <motion.section

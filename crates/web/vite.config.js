@@ -10,6 +10,11 @@ export default defineConfig({
       allow: [fileURLToPath(new URL("../..", import.meta.url))],
     },
   },
+  build: {
+    rollupOptions: {
+      output: { assetFileNames: "assets/[hash][extname]" },
+    },
+  },
   resolve: {
     alias: {
       "@web": webDirectory,

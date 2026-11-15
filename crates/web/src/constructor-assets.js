@@ -1,23 +1,25 @@
+import { assetByStem, imageFiles } from "./asset-lookup.js";
+
 export const constructorAssets = Object.freeze({
   payload: Object.freeze({
-    "base-drill": new URL("../../../Assets/modules-constructor/01 → part_drill.png", import.meta.url).href,
-    "mars-sar": new URL("../../../Assets/modules-constructor/01 → part_radar.png", import.meta.url).href,
-    "quantum-spectrometer": new URL("../../../Assets/modules-constructor/01 → part_spectrometer.png", import.meta.url).href,
+    "base-drill": assetByStem("01 → part_drill"),
+    "mars-sar": assetByStem("01 → part_radar"),
+    "quantum-spectrometer": assetByStem("01 → part_spectrometer"),
   }),
   power: Object.freeze({
-    "solar-wing-v1": new URL("../../../Assets/modules-constructor/02 → part_solar.png", import.meta.url).href,
-    "powercache-x": new URL("../../../Assets/modules-constructor/02 → part_battery.png", import.meta.url).href,
-    "rtg-gold": new URL("../../../Assets/modules-constructor/02 → part_rtg.png", import.meta.url).href,
+    "solar-wing-v1": assetByStem("02 → part_solar"),
+    "powercache-x": assetByStem("02 → part_battery"),
+    "rtg-gold": assetByStem("02 → part_rtg"),
   }),
   hull: Object.freeze({
-    "standard-hull": new URL("../../../Assets/modules-constructor/03 → part_hull.png", import.meta.url).href,
-    "thermal-shield": new URL("../../../Assets/modules-constructor/03 → part_shield.png", import.meta.url).href,
-    "deep-space-relay": new URL("../../../Assets/modules-constructor/03 → part_relay.png", import.meta.url).href,
+    "standard-hull": assetByStem("03 → part_hull"),
+    "thermal-shield": assetByStem("03 → part_shield"),
+    "deep-space-relay": assetByStem("03 → part_relay"),
   }),
   launchVehicle: Object.freeze({
-    "arrow-s": new URL("../../../Assets/modules-constructor/04 → part_rocket_arrow.png", import.meta.url).href,
-    "titan-m": new URL("../../../Assets/modules-constructor/04 → part_rocket_titan.png", import.meta.url).href,
-    "colossus-h": new URL("../../../Assets/modules-constructor/04 → part_rocket_colossus.png", import.meta.url).href,
+    "arrow-s": assetByStem("04 → part_rocket_arrow"),
+    "titan-m": assetByStem("04 → part_rocket_titan"),
+    "colossus-h": assetByStem("04 → part_rocket_colossus"),
   }),
   additional: Object.freeze({
     "stage-1-1": new URL("../../../Assets/1-1.png", import.meta.url).href,
@@ -39,9 +41,9 @@ export const constructorAssets = Object.freeze({
     "asset-5899a8f7785b74f8": new URL("../../../Assets/5899a8f7785b74f8.png", import.meta.url).href,
     "asset-efbdef661a2608fd": new URL("../../../Assets/efbdef661a2608fd.png", import.meta.url).href,
     "asset-image": new URL("../../../Assets/image.png", import.meta.url).href,
-    "launch-button": new URL("../../../Assets/кнопка запуск.png", import.meta.url).href,
-    "launch-button-pressed": new URL("../../../Assets/кнопка запуск нажата.png", import.meta.url).href,
-    "launch-button-disabled": new URL("../../../Assets/кнопка запуск заблокована.png", import.meta.url).href,
+    "launch-button": assetByStem("кнопка запуск"),
+    "launch-button-pressed": assetByStem("кнопка запуск нажата"),
+    "launch-button-disabled": assetByStem("кнопка запуск заблокована"),
   }),
 });
 
@@ -53,8 +55,4 @@ export const allConstructorAssetUrls = Object.freeze([
   ...Object.values(constructorAssets.additional),
 ]);
 
-export const allAssetFiles = import.meta.glob("../../../Assets/**/*.png", {
-  eager: true,
-  import: "default",
-  query: "?url",
-});
+export const allAssetFiles = imageFiles;
